@@ -1,82 +1,106 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import React, { useState, useSyncExternalStore } from "react";
+import Head from "next/head";
+import Navbar from "@/components/Navbar";
+import HeroSection from "@/components/HeroSection";
+import CarScrollSection from "@/components/CarScrollSection";
+import AgencyIntro from "@/components/AgencyIntro";
+import CapabilitiesSection from "@/components/CapabilitiesSection";
+import Footer from "@/components/Footer";
+import { initEngineAudio, stopEngineAudio } from "@/utils/engineAudio";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+// React 19 idiomatic external store subscription for prefers-reduced-motion
+function subscribeReducedMotion(callback) {
+  if (typeof window === "undefined") return () => {};
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+function getReducedMotionSnapshot() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function getServerSnapshot() {
+  return false;
+}
 
 export default function Home() {
+  const systemReducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotionSnapshot,
+    getServerSnapshot
+  );
+
+  const [manualMotionOverride, setManualMotionOverride] = useState(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+
+  // Active motion preference: manual override takes priority over OS preference
+  const reducedMotion =
+    manualMotionOverride !== null ? manualMotionOverride : systemReducedMotion;
+
+  const toggleReducedMotion = () => {
+    setManualMotionOverride((prev) => {
+      const current = prev !== null ? prev : systemReducedMotion;
+      return !current;
+    });
+  };
+
+  const toggleSound = () => {
+    if (!soundEnabled) {
+      const ok = initEngineAudio();
+      if (ok) setSoundEnabled(true);
+    } else {
+      stopEngineAudio();
+      setSoundEnabled(false);
+    }
+  };
+
   return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
-    >
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      <Head>
+        <title>ITZFIZZ // Cinematic Scroll-Driven Hero Animation</title>
+        <meta
+          name="description"
+          content="Production-quality scroll-driven automotive hero animation for the Itzfizz Digital creative web engineering internship assignment."
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              index.js
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs/pages/getting-started?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+        <meta property="og:title" content="ITZFIZZ // Scroll-Driven Hero Animation" />
+        <meta
+          property="og:description"
+          content="High-velocity scroll-driven hero experience engineered with Next.js, Tailwind CSS, and GSAP ScrollTrigger."
+        />
+        <meta property="og:type" content="website" />
+      </Head>
+
+      <div className="min-h-screen bg-[#060709] text-zinc-100 flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">
+        {/* Navigation Bar */}
+        <Navbar
+          reducedMotion={reducedMotion}
+          onToggleReducedMotion={toggleReducedMotion}
+          soundEnabled={soundEnabled}
+          onToggleSound={toggleSound}
+        />
+
+        {/* Main Content Sections */}
+        <main className="flex-1 w-full">
+          {/* 1. Hero Section */}
+          <HeroSection reducedMotion={reducedMotion} />
+
+          {/* 2. Core Scroll-Driven Animation Section */}
+          <CarScrollSection reducedMotion={reducedMotion} />
+
+          {/* 3. Agency Intro Section */}
+          <AgencyIntro />
+
+          {/* 4. Capabilities Grid */}
+          <CapabilitiesSection />
+        </main>
+
+        {/* 5. Minimal Footer */}
+        <Footer />
+      </div>
+    </>
   );
 }
